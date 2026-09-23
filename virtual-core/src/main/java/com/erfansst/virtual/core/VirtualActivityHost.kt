@@ -20,6 +20,8 @@ val i=Intent(host.intent).apply{component=ComponentName(clone.packageName,activi
 attach(target,s.context,s.application,i,info,host.packageManager.getApplicationLabel(s.appInfo),clone)
 info.getThemeResource().takeIf{it!=0}?.let{target.setTheme(it)}
 call(target,"onCreate",arrayOf(Bundle::class.java),arrayOf(null))
+val decor=target.window?.decorView?:error("Target window unavailable")
+host.setContentView(decor)
 return target
 }
 private fun attach(a:Activity,ctx:VirtualContext,app:android.app.Application,intent:Intent,info:ActivityInfo,title:CharSequence,clone:CloneInfo){
