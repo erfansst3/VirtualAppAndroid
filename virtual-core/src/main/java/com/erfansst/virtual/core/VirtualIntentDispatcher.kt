@@ -19,6 +19,7 @@ val name=resolveService(base,clone,intent)?:return null
 if(intent.component?.packageName!=clone.packageName&&intent.getPackage()!=clone.packageName&&intent.component!=null)return null
 return Intent(intent).setComponent(ComponentName(base,ProxyService::class.java)).putExtra(P,clone.packageName).putExtra(I,clone.cloneId).putExtra(S,name)
 }
+fun receiver(base:Context,clone:CloneInfo,name:String,intent:Intent):Intent=Intent(intent).setComponent(ComponentName(base,ProxyReceiver::class.java)).putExtra(P,clone.packageName).putExtra(I,clone.cloneId).putExtra(R,name)
 fun receiver(base:Context,clone:CloneInfo,intent:Intent):Intent?{
 val name=resolveReceiver(base,clone,intent)?:return null
 if(intent.component?.packageName!=clone.packageName&&intent.getPackage()!=clone.packageName&&intent.component!=null)return null
