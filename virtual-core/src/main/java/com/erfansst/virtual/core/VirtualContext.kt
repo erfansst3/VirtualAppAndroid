@@ -11,11 +11,14 @@ import android.content.res.Resources
 import android.os.Handler
 import android.os.IBinder
 import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
 class VirtualContext(base:Context,val clone:CloneInfo,val appInfo:ApplicationInfo,val loader:ClassLoader,res:Resources):ContextWrapper(base){
 private val root=clone.dataDir
 private val vr=res
 private val receivers=HashMap<BroadcastReceiver,BroadcastReceiver>()
 private val connections=HashMap<ServiceConnection,ServiceConnection>()
+private val prefs=HashMap<String,VirtualSharedPreferences>()
 override fun getPackageName()=appInfo.packageName
 override fun getClassLoader()=loader
 override fun getResources()=vr
@@ -32,6 +35,12 @@ override fun getExternalFilesDir(type:String?)=File(root,"external_files"+(if(ty
 override fun getExternalCacheDir()=File(root,"external_cache").also{it.mkdirs()}
 override fun getDatabasePath(name:String)=File(root,"databases/$name").also{it.parentFile?.mkdirs()}
 override fun getDir(name:String,mode:Int)=File(root,"app_$name").also{it.mkdirs()}
+override fun getSharedPreferences(name:String,mode:Int)=prefs.getOrPut(name){VirtualSharedPreferences(File(root,"shared_prefs/$name.properties"))}
+override fun getFileStreamPath(name:String)=File(getFilesDir(),name)
+override fun openFileInput(name:String)=FileInputStream(getFileStreamPath(name))
+override fun openFileOutput(name:String,mode:Int)=FileOutputStream(getFileStreamPath(name),mode and MODE_APPEND!=0)
+override fun deleteFile(name:String)=getFileStreamPath(name).delete()
+override fun fileList()=getFilesDir().list().orEmpty()
 override fun checkSelfPermission(permission:String)=baseContext.packageManager.checkPermission(permission,appInfo.packageName)
 override fun checkCallingOrSelfPermission(permission:String)=checkSelfPermission(permission)
 override fun checkCallingPermission(permission:String)=checkSelfPermission(permission)
@@ -65,23 +74,13 @@ override fun onServiceDisconnected(n:ComponentName){conn.onServiceDisconnected(C
 connections[conn]=w
 return baseContext.bindService(i,w,flags)
 }
-override fun unbindService(conn:ServiceConnection){
-baseContext.unbindService(connections.remove(conn)?:conn)
-}
-override fun sendBroadcast(intent:Intent){
-val i=VirtualIntentDispatcher.receiver(baseContext,clone,intent)
-baseContext.sendBroadcast(i?:intent)
-}
-override fun sendBroadcast(intent:Intent,receiverPermission:String?){
-val i=VirtualIntentDispatcher.receiver(baseContext,clone,intent)
-baseContext.sendBroadcast(i?:intent,receiverPermission)
-}
+override fun unbindService(conn:ServiceConnection){baseContext.unbindService(connections.remove(conn)?:conn)}
+override fun sendBroadcast(intent:Intent){baseContext.sendBroadcast(VirtualIntentDispatcher.receiver(baseContext,clone,intent)?:intent)}
+override fun sendBroadcast(intent:Intent,receiverPermission:String?){baseContext.sendBroadcast(VirtualIntentDispatcher.receiver(baseContext,clone,intent)?:intent,receiverPermission)}
 override fun registerReceiver(receiver:BroadcastReceiver,filter:IntentFilter):Intent?{
 val w=object:BroadcastReceiver(){override fun onReceive(c:Context,i:Intent){receiver.onReceive(this@VirtualContext,i)}}
 receivers[receiver]=w
 return baseContext.registerReceiver(w,filter)
 }
-override fun unregisterReceiver(receiver:BroadcastReceiver){
-baseContext.unregisterReceiver(receivers.remove(receiver)?:receiver)
-}
+override fun unregisterReceiver(receiver:BroadcastReceiver){baseContext.unregisterReceiver(receivers.remove(receiver)?:receiver)}
 }
