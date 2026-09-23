@@ -27,11 +27,12 @@ val attach=Application::class.java.getDeclaredMethod("attach",Context::class.jav
 val s=VirtualSession(clone,ai,cl,ctx,app)
 sessions[key]=s
 activate(s)
+VirtualBroadcastRegistrar.ensure(host,clone)
 runCatching{app.onCreate()}.onFailure{sessions.remove(key);current.remove();throw it}
 return s
 }}
 fun activate(s:VirtualSession){current.set(s)}
 fun current():VirtualSession?=current.get()
-fun clear(packageName:String,id:Int){sessions.remove(packageName+"#"+id);if(current.get()?.clone?.packageName==packageName&&current.get()?.clone?.cloneId==id)current.remove()}
-fun clear(){sessions.clear();current.remove()}
+fun clear(packageName:String,id:Int){val s=sessions.remove(packageName+"#"+id);s?.let{VirtualBroadcastRegistrar.clear(it.context.baseContext,it.clone)};if(current.get()?.clone?.packageName==packageName&&current.get()?.clone?.cloneId==id)current.remove()}
+fun clear(){sessions.values.toList().forEach{VirtualBroadcastRegistrar.clear(it.context.baseContext,it.clone)};sessions.clear();current.remove()}
 }
