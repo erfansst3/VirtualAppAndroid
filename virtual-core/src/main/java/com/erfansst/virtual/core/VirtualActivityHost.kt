@@ -1,26 +1,24 @@
 package com.erfansst.virtual.core
 import android.app.Activity
+import android.app.Instrumentation
 import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.ActivityInfo
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.IBinder
-import android.app.Instrumentation
-import android.content.res.Configuration
 import android.view.Window
+import android.content.res.Configuration
 class VirtualActivityHost(private val host:Activity){
 fun start(clone:CloneInfo,activityName:String):Activity{
 val s=VirtualSessionManager.get(host,clone)
 VirtualSessionManager.activate(s)
-val info=(host.packageManager.getPackageArchiveInfo(clone.apk.path,android.content.pm.PackageManager.GET_ACTIVITIES)?.activities.orEmpty().firstOrNull{it.name==activityName})?:error("Activity not found: $activityName")
+val info=(host.packageManager.getPackageArchiveInfo(clone.apk.path,PackageManager.GET_ACTIVITIES)?.activities.orEmpty().firstOrNull{it.name==activityName})?:error("Activity not found: $activityName")
 info.applicationInfo=s.appInfo;info.packageName=clone.packageName
 val target=s.loader.loadClass(activityName).asSubclass(Activity::class.java).getDeclaredConstructor().newInstance()
-val i=Intent(host.intent).apply{
-component=ComponentName(clone.packageName,activityName)
-removeExtra("clone_package");removeExtra("clone_id");removeExtra("target_activity")
-}
+val i=Intent(host.intent).apply{component=ComponentName(clone.packageName,activityName);removeExtra("clone_package");removeExtra("clone_id");removeExtra("target_activity")}
 attach(target,s.context,s.application,i,info,host.packageManager.getApplicationLabel(s.appInfo))
-call(target,"onCreate",Bundle::class.java,null)
+call(target,"onCreate",arrayOf(Bundle::class.java),arrayOf(null))
 return target
 }
 private fun attach(a:Activity,ctx:VirtualContext,app:android.app.Application,intent:Intent,info:ActivityInfo,title:CharSequence){
@@ -29,14 +27,13 @@ val main=field(host,"mMainThread")
 val instr0=field(host,"mInstrumentation") as? Instrumentation
 val instr=instr0?.let{VirtualInstrumentation(it,clone,host)}
 val ident=(field(host,"mIdent") as? Int)?:0
-val m=Activity::class.java.declaredMethods.filter{it.name=="attach"}.maxByOrNull{it.parameterTypes.size}?:error("Activity.attach unavailable")
+val m=Activity::class.java.declaredMethods.firstOrNull{it.name=="attach"}?:error("Activity.attach unavailable")
 m.isAccessible=true
-var binder=false
 val args=m.parameterTypes.map{t->when{
 t==android.content.Context::class.java->ctx
 t.name=="android.app.ActivityThread"->main
 t==Instrumentation::class.java->instr
-t==IBinder::class.java->{if(!binder&&token!=null){binder=true;token}else null}
+t==IBinder::class.java->token
 t==Int::class.javaPrimitiveType->ident
 t==android.app.Application::class.java->app
 t==Intent::class.java->intent
@@ -46,14 +43,17 @@ t==Activity::class.java->null
 t==Configuration::class.java->Configuration(ctx.resources.configuration)
 t==String::class.java->null
 t.name.contains("NonConfigurationInstances")->null
-t==Window::class.java->null
+t.name.contains("IVoiceInteractor")->null
 else->null
 }}.toTypedArray()
 m.invoke(a,*args)
 }
-private fun call(o:Any,name:String,vararg types:Class<*>,arg:Any?=null){
+private fun call(o:Any,name:String,types:Array<Class<*>>,args:Array<Any?>){
 var c:Class<*>?=o.javaClass
-while(c!=null){runCatching{val m=c.getDeclaredMethod(name,*types);m.isAccessible=true;if(types.isEmpty())m.invoke(o)else m.invoke(o,arg);return};c=c.superclass}
+while(c!=null){
+runCatching{val m=c.getDeclaredMethod(name,*types);m.isAccessible=true;m.invoke(o,*args);return}
+c=c.superclass
+}
 }
 private fun field(o:Any,n:String):Any?{
 var c:Class<*>?=o.javaClass
