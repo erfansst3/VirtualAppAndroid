@@ -1,28 +1,39 @@
 package com.erfansst.virtualapp
 import android.app.Activity
 import android.app.AlertDialog
-import android.content.Intent
 import android.os.Bundle
 import android.widget.*
 import com.erfansst.virtual.core.*
-import java.io.File
 class MainActivity:Activity(){
 private lateinit var app:VirtualApp
-private lateinit var repo:ApkRepository
+private lateinit var runtime:VirtualRuntime
 private lateinit var list:LinearLayout
 override fun onCreate(b:Bundle?){
-super.onCreate(b);app=VirtualApp(this).also{it.init()};CrashReporter.install(this);repo=ApkRepository(this)
+super.onCreate(b)
+app=VirtualApp(this).also{it.init()}
+CrashReporter.install(this)
+runtime=VirtualRuntime(this)
 val root=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL;setPadding(24,24,24,24)}
-val title=TextView(this).apply{text="VirtualAppAndroid";textSize=24f}
-val add=Button(this).apply{text="Import APK"};val logs=Button(this).apply{text="View Logs"}
+root.addView(TextView(this).apply{text="VirtualAppAndroid";textSize=24f})
+root.addView(TextView(this).apply{text="Installed apps";textSize=18f;setPadding(0,24,0,12)})
 list=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL}
-root.addView(title);root.addView(add);root.addView(logs);root.addView(list);setContentView(root)
-add.setOnClickListener{startActivityForResult(Intent(Intent.ACTION_OPEN_DOCUMENT).apply{type="application/vnd.android.package-archive";addCategory(Intent.CATEGORY_OPENABLE)},10)}
-logs.setOnClickListener{showLogs()}
+root.addView(list)
+setContentView(root)
+refresh()
 }
-override fun onActivityResult(r:Int,c:Int,d:Intent?){super.onActivityResult(r,c,d);if(r==10&&c==RESULT_OK)d?.data?.let{uri->
-val f=File(cacheDir,"import.apk");contentResolver.openInputStream(uri)?.use{input->f.outputStream().use{input.copyTo(it)}}
-runCatching{repo.import(f)}.onSuccess{addRow(it)}.onFailure{e->Toast.makeText(this,e.message,Toast.LENGTH_LONG).show()}}}
-private fun addRow(v:VirtualApk){list.addView(TextView(this).apply{text=v.label+"\n"+v.packageName+" • "+v.versionName;textSize=16f;setPadding(12,12,12,12)})}
-private fun showLogs(){val f=File(app.logsDir,"host.log");val text=if(f.exists())f.readText() else "No logs";AlertDialog.Builder(this).setTitle("Logs").setMessage(text.takeLast(12000)).setPositiveButton("OK",null).show()}
+private fun refresh(){
+list.removeAllViews()
+runtime.apps().forEach{item->
+val row=LinearLayout(this).apply{orientation=LinearLayout.HORIZONTAL;setPadding(0,8,0,8)}
+val info=TextView(this).apply{text=item.label+"\n"+item.packageName;textSize=16f}
+row.addView(info,LinearLayout.LayoutParams(0,-2,1f))
+row.addView(Button(this).apply{text="Clone";setOnClickListener{
+runCatching{runtime.clone(item)}.onSuccess{showStatus(item,"Clone prepared")}.onFailure{showStatus(item,it.message?:"Clone failed")}
+}})
+list.addView(row)
+}
+}
+private fun showStatus(item:InstalledApp,msg:String){
+AlertDialog.Builder(this).setTitle(item.label).setMessage(msg+"\n\nThe APK is taken directly from the installed app. No APK import is required.\n\nFull in-process virtualization still requires Android framework hooks before the cloned app can be launched inside this process.").setPositiveButton("OK",null).show()
+}
 }
