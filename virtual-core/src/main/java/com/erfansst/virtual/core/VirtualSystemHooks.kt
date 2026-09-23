@@ -39,6 +39,7 @@ return@InvocationHandler m.invoke(base,*pa)
 val rewritten=a.map{arg->when(arg){
 is Intent->rewrite(arg,s,m.name)
 is Array<*>->if(arg.all{it is Intent})arg.map{rewrite(it as Intent,s,m.name)}.toTypedArray()else arg
+is String->if(m.name.startsWith("getIntentSender")&&arg==s.appInfo.packageName)s.context.baseContext.packageName else arg
 else->arg
 }}.toTypedArray()
 when{
