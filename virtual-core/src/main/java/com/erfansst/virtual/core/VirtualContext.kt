@@ -23,4 +23,7 @@ override fun getExternalFilesDir(type:String?)=File(root,"external_files"+(if(ty
 override fun getExternalCacheDir()=File(root,"external_cache").also{it.mkdirs()}
 override fun getDatabasePath(name:String)=File(root,"databases/$name").also{it.parentFile?.mkdirs()}
 override fun getDir(name:String,mode:Int)=File(root,"app_$name").also{it.mkdirs()}
+override fun checkSelfPermission(permission:String)=baseContext.packageManager.checkPermission(permission,appInfo.packageName)
+override fun checkCallingOrSelfPermission(permission:String)=checkSelfPermission(permission)
+override fun checkCallingPermission(permission:String)=checkSelfPermission(permission)
 }
