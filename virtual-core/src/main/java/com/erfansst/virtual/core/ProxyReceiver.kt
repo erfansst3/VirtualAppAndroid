@@ -12,7 +12,7 @@ runCatching{
 HiddenApi.relax()
 val pi=context.packageManager.getPackageArchiveInfo(c.apk.path,android.content.pm.PackageManager.GET_RECEIVERS or android.content.pm.PackageManager.GET_META_DATA)?:return
 val ai=android.content.pm.ApplicationInfo(pi.applicationInfo)
-ai.packageName=c.packageName;ai.sourceDir=c.apk.path;ai.publicSourceDir=c.apk.path;ai.dataDir=c.dataDir.path;ai.nativeLibraryDir=FilePaths.lib(c)
+ai.packageName=c.packageName;ai.sourceDir=c.apk.path;ai.publicSourceDir=c.apk.path;ai.dataDir=c.dataDir.path;ai.nativeLibraryDir=FilePaths.lib(c).path
 val cl=VirtualClassLoader(context).load(c)
 val res=VirtualResources().open(context.resources,c.apk.path)
 val vc=VirtualContext(context,c,ai,cl,res)
