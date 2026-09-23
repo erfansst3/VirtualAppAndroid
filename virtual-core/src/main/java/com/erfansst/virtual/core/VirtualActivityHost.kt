@@ -11,6 +11,7 @@ import android.view.Window
 class VirtualActivityHost(private val host:Activity){
 fun start(clone:CloneInfo,activityName:String):Activity{
 val s=VirtualSessionManager.get(host,clone)
+VirtualSessionManager.activate(s)
 val info=(host.packageManager.getPackageArchiveInfo(clone.apk.path,android.content.pm.PackageManager.GET_ACTIVITIES)?.activities.orEmpty().firstOrNull{it.name==activityName})?:error("Activity not found: $activityName")
 info.applicationInfo=s.appInfo;info.packageName=clone.packageName
 val target=s.loader.loadClass(activityName).asSubclass(Activity::class.java).getDeclaredConstructor().newInstance()
