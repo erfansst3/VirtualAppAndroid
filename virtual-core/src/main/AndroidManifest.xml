@@ -1,1 +1,1 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"/>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"><application><service android:name="com.erfansst.virtual.core.ProxyService" android:exported="false" android:process=":virtual"/><receiver android:name="com.erfansst.virtual.core.ProxyReceiver" android:exported="false"/></application></manifest>
