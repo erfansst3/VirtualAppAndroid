@@ -1,7 +1,7 @@
 package com.erfansst.virtual.core
 import android.content.Context
 import java.io.File
-data class CloneInfo(val packageName:String,val cloneId:Int,val apk:File,val dataDir:File,val splits:List<File>=emptyList(),val launcherActivity:String?=null)
+data class CloneInfo(val packageName:String,val cloneId:Int,val apk:File,val dataDir:File,val splits:List<File> = emptyList(),val launcherActivity:String? = null)
 class CloneManager(private val context:Context){
 private val root=File(context.filesDir,"virtual/clones")
 private val store=CloneStore(root)
@@ -21,7 +21,8 @@ if(!root.exists())return emptyList()
 return root.listFiles().orEmpty().mapNotNull{d->
 val n=d.name.lastIndexOf('_');if(n<1)return@mapNotNull null
 val id=d.name.substring(n+1).toIntOrNull()?:return@mapNotNull null
-val p=d.name.substring(0,n);val apk=File(d,"base.apk");if(!apk.exists())null else{
+val p=d.name.substring(0,n);val apk=File(d,"base.apk")
+if(!apk.exists())null else{
 val m=store.load(d)
 CloneInfo(p,id,apk,File(d,"data"),File(d,"splits").listFiles().orEmpty().toList(),m?.launcherActivity)
 }}.sortedWith(compareBy({it.packageName},{it.cloneId}))
