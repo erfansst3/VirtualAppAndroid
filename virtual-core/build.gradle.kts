@@ -1,0 +1,3 @@
+plugins{id("com.android.library");id("org.jetbrains.kotlin.android")}
+android{namespace="com.erfansst.virtual.core";compileSdk=36
+defaultConfig{minSdk=26}}
