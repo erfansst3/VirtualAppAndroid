@@ -1,5 +1,6 @@
 package com.erfansst.virtualapp
 import android.app.Activity
+import android.app.AlertDialog
 import android.os.Bundle
 import android.widget.*
 import com.erfansst.virtual.core.*
@@ -25,9 +26,8 @@ list.addView(row)
 runtime.clones().forEach{clone->
 val row=LinearLayout(this).apply{orientation=LinearLayout.HORIZONTAL;setPadding(0,16,0,8)}
 row.addView(TextView(this).apply{text="Clone: "+clone.packageName+" #"+clone.cloneId;textSize=16f},LinearLayout.LayoutParams(0,-2,1f))
-row.addView(Button(this).apply{text="Launch";setOnClickListener{
-val i=runtime.launch(clone);if(i==null)toast("No launchable activity") else startActivity(i)
-}})
+row.addView(Button(this).apply{text="Launch";setOnClickListener{val i=runtime.launch(clone);if(i==null)toast("No launchable activity") else startActivity(i)}})
+row.addView(Button(this).apply{text="Logs";setOnClickListener{val t=VirtualDiagnostics.read(this@MainActivity,clone);AlertDialog.Builder(this@MainActivity).setTitle(clone.packageName+" #"+clone.cloneId).setMessage(if(t.isEmpty())"No logs" else t).setPositiveButton("OK",null).show()}})
 row.addView(Button(this).apply{text="Delete";setOnClickListener{runtime.delete(clone.packageName,clone.cloneId);VirtualSessionManager.clear(clone.packageName,clone.cloneId);refresh()}})
 list.addView(row)
 }
