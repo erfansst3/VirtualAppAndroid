@@ -6,6 +6,7 @@ import android.os.IBinder
 class VirtualServiceHost(private val proxy:Service){
 fun start(clone:CloneInfo,name:String):Service{
 val s=VirtualSessionManager.get(proxy,clone)
+VirtualSessionManager.activate(s)
 val a=s.loader.loadClass(name).asSubclass(Service::class.java).getDeclaredConstructor().newInstance()
 val token=field(proxy,"mToken") as? IBinder
 val thread=field(proxy,"mThread")
