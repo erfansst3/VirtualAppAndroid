@@ -1,12 +1,21 @@
 package com.erfansst.virtual.core
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.ContextWrapper
+import android.content.Intent
+import android.content.IntentFilter
+import android.content.ServiceConnection
+import android.content.ComponentName
 import android.content.pm.ApplicationInfo
 import android.content.res.Resources
+import android.os.Handler
+import android.os.IBinder
 import java.io.File
 class VirtualContext(base:Context,val clone:CloneInfo,val appInfo:ApplicationInfo,val loader:ClassLoader,res:Resources):ContextWrapper(base){
 private val root=clone.dataDir
 private val vr=res
+private val receivers=HashMap<BroadcastReceiver,BroadcastReceiver>()
+private val connections=HashMap<ServiceConnection,ServiceConnection>()
 override fun getPackageName()=appInfo.packageName
 override fun getClassLoader()=loader
 override fun getResources()=vr
@@ -26,4 +35,53 @@ override fun getDir(name:String,mode:Int)=File(root,"app_$name").also{it.mkdirs(
 override fun checkSelfPermission(permission:String)=baseContext.packageManager.checkPermission(permission,appInfo.packageName)
 override fun checkCallingOrSelfPermission(permission:String)=checkSelfPermission(permission)
 override fun checkCallingPermission(permission:String)=checkSelfPermission(permission)
+override fun startActivity(intent:Intent){
+val i=VirtualIntentDispatcher.activity(baseContext,clone,intent)
+if(i!=null)baseContext.startActivity(i)else baseContext.startActivity(intent)
+}
+override fun startActivity(intent:Intent,options:android.os.Bundle?){
+val i=VirtualIntentDispatcher.activity(baseContext,clone,intent)
+if(i!=null)baseContext.startActivity(i,options)else baseContext.startActivity(intent,options)
+}
+override fun startService(service:Intent):ComponentName?{
+val i=VirtualIntentDispatcher.service(baseContext,clone,service)
+return baseContext.startService(i?:service)
+}
+override fun startForegroundService(service:Intent):ComponentName{
+val i=VirtualIntentDispatcher.service(baseContext,clone,service)
+return baseContext.startForegroundService(i?:service)
+}
+override fun stopService(service:Intent):Boolean{
+val i=VirtualIntentDispatcher.service(baseContext,clone,service)
+return baseContext.stopService(i?:service)
+}
+override fun bindService(service:Intent,conn:ServiceConnection,flags:Int):Boolean{
+val i=VirtualIntentDispatcher.service(baseContext,clone,service)?:service
+if(i===service)return baseContext.bindService(service,conn,flags)
+val w=object:ServiceConnection{
+override fun onServiceConnected(n:ComponentName,b:IBinder){conn.onServiceConnected(ComponentName(clone.packageName,service.component?.className?:n.className),b)}
+override fun onServiceDisconnected(n:ComponentName){conn.onServiceDisconnected(ComponentName(clone.packageName,service.component?.className?:n.className))}
+}
+connections[conn]=w
+return baseContext.bindService(i,w,flags)
+}
+override fun unbindService(conn:ServiceConnection){
+baseContext.unbindService(connections.remove(conn)?:conn)
+}
+override fun sendBroadcast(intent:Intent){
+val i=VirtualIntentDispatcher.receiver(baseContext,clone,intent)
+baseContext.sendBroadcast(i?:intent)
+}
+override fun sendBroadcast(intent:Intent,receiverPermission:String?){
+val i=VirtualIntentDispatcher.receiver(baseContext,clone,intent)
+baseContext.sendBroadcast(i?:intent,receiverPermission)
+}
+override fun registerReceiver(receiver:BroadcastReceiver,filter:IntentFilter):Intent?{
+val w=object:BroadcastReceiver(){override fun onReceive(c:Context,i:Intent){receiver.onReceive(this@VirtualContext,i)}}
+receivers[receiver]=w
+return baseContext.registerReceiver(w,filter)
+}
+override fun unregisterReceiver(receiver:BroadcastReceiver){
+baseContext.unregisterReceiver(receivers.remove(receiver)?:receiver)
+}
 }
