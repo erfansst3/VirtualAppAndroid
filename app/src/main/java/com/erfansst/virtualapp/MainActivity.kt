@@ -7,11 +7,11 @@ class MainActivity:Activity(){
 private lateinit var runtime:VirtualRuntime
 private lateinit var list:LinearLayout
 override fun onCreate(b:Bundle?){
-super.onCreate(b)
-VirtualApp(this).init();CrashReporter.install(this);runtime=VirtualRuntime(this)
+super.onCreate(b);runtime=VirtualRuntime(this)
 val root=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL;setPadding(24,24,24,24)}
 root.addView(TextView(this).apply{text="VirtualAppAndroid";textSize=24f})
-root.addView(TextView(this).apply{text="Installed apps";textSize=18f;setPadding(0,24,0,12)})
+root.addView(TextView(this).apply{text="GMS: "+if(GmsCompatibility.installed(this@MainActivity).isEmpty())"not detected" else "detected";textSize=15f;setPadding(0,8,0,16)})
+root.addView(TextView(this).apply{text="Installed apps";textSize=18f;setPadding(0,8,0,12)})
 list=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL};root.addView(list);setContentView(root);refresh()
 }
 private fun refresh(){
@@ -26,9 +26,9 @@ runtime.clones().forEach{clone->
 val row=LinearLayout(this).apply{orientation=LinearLayout.HORIZONTAL;setPadding(0,16,0,8)}
 row.addView(TextView(this).apply{text="Clone: "+clone.packageName+" #"+clone.cloneId;textSize=16f},LinearLayout.LayoutParams(0,-2,1f))
 row.addView(Button(this).apply{text="Launch";setOnClickListener{
-val i=VirtualLauncher(this@MainActivity).intent(clone)
-if(i==null)toast("No launchable activity") else startActivity(i)
+val i=runtime.launch(clone);if(i==null)toast("No launchable activity") else startActivity(i)
 }})
+row.addView(Button(this).apply{text="Delete";setOnClickListener{runtime.delete(clone.packageName,clone.cloneId);VirtualSessionManager.clear(clone.packageName,clone.cloneId);refresh()}})
 list.addView(row)
 }
 }
