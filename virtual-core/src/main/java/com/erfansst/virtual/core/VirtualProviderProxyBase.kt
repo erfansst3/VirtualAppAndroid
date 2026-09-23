@@ -12,7 +12,7 @@ private fun clone():CloneInfo?=context?.let{CloneManager(it).list().firstOrNull{
 private fun target(uri:Uri):ContentProvider?{
 val c=clone()?:return null
 val a=uri.authority?:return null
-val n=VirtualProviderRegistry.targetProvider(requireNotNull(context),c,a)?:return null
+if(!VirtualProviderRegistry.isTarget(requireNotNull(context),c,a))return null
 val k=c.packageName+"#"+c.cloneId+"#"+a
 return targets.getOrPut(k){VirtualProviderHost(requireNotNull(context)).get(c,a)}
 }
@@ -26,5 +26,7 @@ override fun update(uri:Uri,v:ContentValues?,s:String?,a:Array<String>?):Int=tar
 override fun openFile(uri:Uri,mode:String):ParcelFileDescriptor?=target(uri)?.openFile(real(uri),mode)
 @Throws(FileNotFoundException::class)
 override fun openAssetFile(uri:Uri,mode:String)=target(uri)?.openAssetFile(real(uri),mode)
+fun call(callingPkg:String?,attributionTag:String?,authority:String,method:String,arg:String?,extras:Bundle?):Bundle?=target(Uri.parse("content://"+authority))?.call(method,arg,extras)
+fun call(callingPkg:String?,authority:String,method:String,arg:String?,extras:Bundle?):Bundle?=target(Uri.parse("content://"+authority))?.call(method,arg,extras)
 override fun onDestroy(){targets.values.forEach{runCatching{it.shutdown()}};targets.clear();super.onDestroy()}
 }
