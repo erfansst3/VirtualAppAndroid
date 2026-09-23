@@ -9,9 +9,9 @@ fun start(clone:CloneInfo,name:String):Service{
 HiddenApi.relax()
 val pi=proxy.packageManager.getPackageArchiveInfo(clone.apk.path,PackageManager.GET_SERVICES or PackageManager.GET_META_DATA)?:error("APK parse failed")
 val ai=android.content.pm.ApplicationInfo(pi.applicationInfo)
-ai.packageName=clone.packageName;ai.sourceDir=clone.apk.path;ai.publicSourceDir=clone.apk.path;ai.dataDir=clone.dataDir.path;ai.nativeLibraryDir=FilePaths.lib(clone)
+ai.packageName=clone.packageName;ai.sourceDir=clone.apk.path;ai.publicSourceDir=clone.apk.path;ai.dataDir=clone.dataDir.path;ai.nativeLibraryDir=FilePaths.lib(clone).path
 val loader=VirtualClassLoader(proxy).load(clone)
-val res=VirtualResources().open(proxy.resources,clone.apk.path)
+val res=VirtualResources().open(proxy.resources,listOf(clone.apk.path)+clone.splits.map{it.path})
 val ctx=VirtualContext(proxy,clone,ai,loader,res)
 val appName=ai.className?.takeIf{it.isNotBlank()}?:Application::class.java.name
 val app=loader.loadClass(appName).getDeclaredConstructor().newInstance() as Application
