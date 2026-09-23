@@ -18,6 +18,7 @@ info.applicationInfo=s.appInfo;info.packageName=clone.packageName
 val target=s.loader.loadClass(activityName).asSubclass(Activity::class.java).getDeclaredConstructor().newInstance()
 val i=Intent(host.intent).apply{component=ComponentName(clone.packageName,activityName);removeExtra("clone_package");removeExtra("clone_id");removeExtra("target_activity")}
 attach(target,s.context,s.application,i,info,host.packageManager.getApplicationLabel(s.appInfo))
+info.getThemeResource().takeIf{it!=0}?.let{target.setTheme(it)}
 call(target,"onCreate",arrayOf(Bundle::class.java),arrayOf(null))
 return target
 }
