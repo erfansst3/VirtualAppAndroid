@@ -25,6 +25,8 @@ override fun getPackageName()=appInfo.packageName
 override fun getOpPackageName()=appInfo.packageName
 override fun getBasePackageName()=appInfo.packageName
 override fun getClassLoader()=loader
+override fun getAssets()=vr.assets
+override fun createPackageContext(packageName:String,flags:Int):Context=if(packageName==appInfo.packageName)this else super.createPackageContext(packageName,flags)
 override fun getResources()=vr
 override fun getApplicationInfo()=appInfo
 override fun getApplicationContext():Context=this
