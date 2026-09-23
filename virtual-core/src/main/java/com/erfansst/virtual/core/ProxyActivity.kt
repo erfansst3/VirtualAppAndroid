@@ -13,7 +13,7 @@ val a=intent.getStringExtra("target_activity")?:return
 runCatching{
 val c=CloneManager(this).list().firstOrNull{it.packageName==p&&it.cloneId==id}?:error("Clone missing")
 target=VirtualActivityHost(this).start(c,a)
-}.onFailure{Toast.makeText(this,"Clone failed: "+(it.message?:it.javaClass.simpleName),Toast.LENGTH_LONG).show();finish()}
+}.onFailure{VirtualDiagnostics.log(this,"Activity start failed",it);Toast.makeText(this,"Clone failed: "+(it.message?:it.javaClass.simpleName),Toast.LENGTH_LONG).show();finish()}
 }
 override fun onStart(){super.onStart();call("onStart")}
 override fun onResume(){super.onResume();call("onResume")}
