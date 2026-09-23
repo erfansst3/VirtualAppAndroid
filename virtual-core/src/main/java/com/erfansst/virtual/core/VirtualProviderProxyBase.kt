@@ -26,7 +26,6 @@ override fun update(uri:Uri,v:ContentValues?,s:String?,a:Array<String>?):Int=tar
 override fun openFile(uri:Uri,mode:String):ParcelFileDescriptor?=target(uri)?.openFile(real(uri),mode)
 @Throws(FileNotFoundException::class)
 override fun openAssetFile(uri:Uri,mode:String)=target(uri)?.openAssetFile(real(uri),mode)
-fun call(callingPkg:String?,attributionTag:String?,authority:String,method:String,arg:String?,extras:Bundle?):Bundle?=target(Uri.parse("content://"+authority))?.call(method,arg,extras)
-fun call(callingPkg:String?,authority:String,method:String,arg:String?,extras:Bundle?):Bundle?=target(Uri.parse("content://"+authority))?.call(method,arg,extras)
+override fun call(callingPkg:String?,attributionTag:String?,authority:String,method:String,arg:String?,extras:Bundle?):Bundle?=target(Uri.parse("content://"+authority))?.call(method,arg,extras)
 override fun onDestroy(){targets.values.forEach{runCatching{it.shutdown()}};targets.clear();super.onDestroy()}
 }
