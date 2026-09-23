@@ -19,7 +19,7 @@ override fun onStart(){super.onStart();call("onStart")}
 override fun onResume(){super.onResume();call("onResume")}
 override fun onPause(){call("onPause");super.onPause()}
 override fun onStop(){call("onStop");super.onStop()}
-override fun onDestroy(){call("onDestroy");VirtualSessionManager.clear(intent.getStringExtra("clone_package").orEmpty(),intent.getIntExtra("clone_id",1));super.onDestroy()}
+override fun onDestroy(){call("onDestroy");super.onDestroy()}
 override fun onNewIntent(i:Intent){super.onNewIntent(i);call("onNewIntent",arrayOf(Intent::class.java),arrayOf(i))}
 override fun onActivityResult(r:Int,c:Int,d:Intent?){super.onActivityResult(r,c,d);call("onActivityResult",arrayOf(Int::class.java,Int::class.java,Intent::class.java),arrayOf(r,c,d))}
 override fun onSaveInstanceState(out:Bundle){call("onSaveInstanceState",arrayOf(Bundle::class.java),arrayOf(out));super.onSaveInstanceState(out)}
