@@ -14,7 +14,7 @@ val pi=context.packageManager.getPackageArchiveInfo(c.apk.path,android.content.p
 val ai=android.content.pm.ApplicationInfo(pi.applicationInfo)
 ai.packageName=c.packageName;ai.sourceDir=c.apk.path;ai.publicSourceDir=c.apk.path;ai.dataDir=c.dataDir.path;ai.nativeLibraryDir=FilePaths.lib(c).path
 val cl=VirtualClassLoader(context).load(c)
-val res=VirtualResources().open(context.resources,c.apk.path)
+val res=VirtualResources().open(context.resources,listOf(c.apk.path)+c.splits.map{it.path})
 val vc=VirtualContext(context,c,ai,cl,res)
 val appName=ai.className?.takeIf{it.isNotBlank()}?:android.app.Application::class.java.name
 val app=cl.loadClass(appName).getDeclaredConstructor().newInstance() as android.app.Application
