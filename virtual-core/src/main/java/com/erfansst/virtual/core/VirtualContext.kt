@@ -23,7 +23,6 @@ private val prefs=HashMap<String,VirtualSharedPreferences>()
 private var resolver:android.content.ContentResolver?=null
 override fun getPackageName()=appInfo.packageName
 override fun getOpPackageName()=appInfo.packageName
-override fun getBasePackageName()=appInfo.packageName
 override fun getClassLoader()=loader
 override fun getAssets()=vr.assets
 override fun createPackageContext(packageName:String,flags:Int):Context=if(packageName==appInfo.packageName)this else super.createPackageContext(packageName,flags)
@@ -42,7 +41,7 @@ override fun getExternalCacheDir()=File(root,"external_cache").also{it.mkdirs()}
 override fun getDatabasePath(name:String)=File(root,"databases/$name").also{it.parentFile?.mkdirs()}
 override fun getDir(name:String,mode:Int)=File(root,"app_$name").also{it.mkdirs()}
 override fun getSharedPreferences(name:String,mode:Int)=prefs.getOrPut(name){VirtualSharedPreferences(File(root,"shared_prefs/$name.properties"))}
-override fun getContentResolver():android.content.ContentResolver{resolver?.let{return it};val thread=field(baseContext,"mMainThread")?:field(baseContext,"mActivityThread")?:error("ActivityThread unavailable");val c=Class.forName("android.app.ContextImpl\$ApplicationContentResolver");val ctor=c.getDeclaredConstructor(Context::class.java,Class.forName("android.app.ActivityThread"));ctor.isAccessible=true;return ctor.newInstance(this,thread).also{resolver=it as android.content.ContentResolver}}
+override fun getContentResolver():android.content.ContentResolver{resolver?.let{return it};val thread=field(baseContext,"mMainThread")?:field(baseContext,"mActivityThread")?:error("ActivityThread unavailable");val c=Class.forName("android.app.ContextImpl\$ApplicationContentResolver");val ctor=c.getDeclaredConstructor(Context::class.java,Class.forName("android.app.ActivityThread"));ctor.isAccessible=true;return (ctor.newInstance(this,thread) as android.content.ContentResolver).also{resolver=it}}
 private fun field(o:Any,n:String):Any?{var c:Class<*>?=o.javaClass;while(c!=null){try{val f=c.getDeclaredField(n);f.isAccessible=true;return f.get(o)}catch(_:Throwable){};c=c.superclass};return null}
 override fun getFileStreamPath(name:String)=File(getFilesDir(),name)
 override fun openFileInput(name:String)=FileInputStream(getFileStreamPath(name))
