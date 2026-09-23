@@ -32,6 +32,10 @@ private fun handler(base:Any)=InvocationHandler{_,m,args->
 val a=args?:emptyArray()
 val s=VirtualSessionManager.current()
 if(s==null)return@InvocationHandler m.invoke(base,*a)
+if(m.name.contains("getContentProvider",true)){
+val pa=a.map{if(it is String&&VirtualProviderRegistry.isTarget(contextFor(s),s.clone,it))VirtualProviderRegistry.stubAuthority(s.clone.cloneId)else it}.toTypedArray()
+return@InvocationHandler m.invoke(base,*pa)
+}
 val rewritten=a.map{arg->when(arg){
 is Intent->rewrite(arg,s,m.name)
 is Array<*>->if(arg.all{it is Intent})arg.map{rewrite(it as Intent,s,m.name)}.toTypedArray()else arg
@@ -43,6 +47,7 @@ m.name=="getPackageUid"&&a.firstOrNull()==s.appInfo.packageName->Process.myUid()
 else->m.invoke(base,*rewritten)
 }
 }
+private fun contextFor(s:VirtualSession):android.content.Context=s.context.baseContext
 private fun rewrite(i:Intent,s:VirtualSession,name:String):Intent{
 val c=i.component?:return i
 if(c.packageName!=s.appInfo.packageName)return i
