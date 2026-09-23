@@ -27,6 +27,6 @@ val m=store.load(d)
 CloneInfo(p,id,apk,File(d,"data"),File(d,"splits").listFiles().orEmpty().toList(),m?.launcherActivity)
 }}.sortedWith(compareBy({it.packageName},{it.cloneId}))
 }
-fun nextId(packageName:String):Int=(list().filter{it.packageName==packageName}.maxOfOrNull{it.cloneId}?:0)+1
+fun nextId(packageName:String):Int{for(i in 1..VirtualProviderRegistry.MAX_SLOTS)if(list().none{it.packageName==packageName&&it.cloneId==i})return i;error("No free clone slots")}
 fun delete(packageName:String,id:Int=1)=File(root,packageName+"_"+id).deleteRecursively()
 }
