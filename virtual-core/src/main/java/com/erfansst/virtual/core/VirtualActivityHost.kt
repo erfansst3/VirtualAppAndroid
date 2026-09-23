@@ -25,7 +25,8 @@ return target
 private fun attach(a:Activity,ctx:VirtualContext,app:android.app.Application,intent:Intent,info:ActivityInfo,title:CharSequence){
 val token=field(host,"mToken") as? IBinder
 val main=field(host,"mMainThread")
-val instr=field(host,"mInstrumentation") as? Instrumentation
+val instr0=field(host,"mInstrumentation") as? Instrumentation
+val instr=instr0?.let{VirtualInstrumentation(it,clone,host)}
 val ident=(field(host,"mIdent") as? Int)?:0
 val m=Activity::class.java.declaredMethods.filter{it.name=="attach"}.maxByOrNull{it.parameterTypes.size}?:error("Activity.attach unavailable")
 m.isAccessible=true
