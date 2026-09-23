@@ -7,6 +7,7 @@ import java.util.concurrent.ConcurrentHashMap
 data class VirtualSession(val clone:CloneInfo,val appInfo:ApplicationInfo,val loader:ClassLoader,val context:VirtualContext,val application:Application)
 object VirtualSessionManager{
 private val sessions=ConcurrentHashMap<String,VirtualSession>()
+private val current=object:InheritableThreadLocal<VirtualSession?>(){}
 fun get(host:Context,clone:CloneInfo):VirtualSession{
 val key=clone.packageName+"#"+clone.cloneId
 sessions[key]?.let{return it}
@@ -25,6 +26,8 @@ val m=Application::class.java.getDeclaredMethod("attach",Context::class.java);m.
 app.onCreate()
 return VirtualSession(clone,ai,cl,ctx,app).also{sessions[key]=it}
 }}
-fun clear(packageName:String,id:Int){sessions.remove(packageName+"#"+id)}
+fun activate(s:VirtualSession){current.set(s)}
+fun current():VirtualSession?=current.get()
+fun clear(packageName:String,id:Int){sessions.remove(packageName+"#"+id);if(current.get()?.clone?.packageName==packageName&&current.get()?.clone?.cloneId==id)current.remove()}
 fun clear(){sessions.clear()}
 }
