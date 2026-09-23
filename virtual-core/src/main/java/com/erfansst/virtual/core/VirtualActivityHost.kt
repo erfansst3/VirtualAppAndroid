@@ -19,7 +19,7 @@ component=ComponentName(clone.packageName,activityName)
 removeExtra("clone_package");removeExtra("clone_id");removeExtra("target_activity")
 }
 attach(target,s.context,s.application,i,info,host.packageManager.getApplicationLabel(s.appInfo))
-call(target,"onCreate",Bundle::class.java,null);call(target,"onStart");call(target,"onResume")
+call(target,"onCreate",Bundle::class.java,null)
 return target
 }
 private fun attach(a:Activity,ctx:VirtualContext,app:android.app.Application,intent:Intent,info:ActivityInfo,title:CharSequence){
