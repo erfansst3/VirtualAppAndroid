@@ -48,7 +48,7 @@ override fun startActivity(intent:Intent){
 val i=VirtualIntentDispatcher.activity(baseContext,clone,intent)
 if(i!=null)baseContext.startActivity(i)else baseContext.startActivity(intent)
 }
-override fun startActivity(intent:Intent,options:android.os.Bundle?){
+override fun startActivity(intent:Intent,options:Bundle?){
 val i=VirtualIntentDispatcher.activity(baseContext,clone,intent)
 if(i!=null)baseContext.startActivity(i,options)else baseContext.startActivity(intent,options)
 }
@@ -56,7 +56,7 @@ override fun startService(service:Intent):ComponentName?{
 val i=VirtualIntentDispatcher.service(baseContext,clone,service)
 return baseContext.startService(i?:service)
 }
-override fun startForegroundService(service:Intent):ComponentName{
+override fun startForegroundService(service:Intent):ComponentName?{
 val i=VirtualIntentDispatcher.service(baseContext,clone,service)
 return baseContext.startForegroundService(i?:service)
 }
@@ -77,10 +77,29 @@ return baseContext.bindService(i,w,flags)
 override fun unbindService(conn:ServiceConnection){baseContext.unbindService(connections.remove(conn)?:conn)}
 override fun sendBroadcast(intent:Intent){baseContext.sendBroadcast(VirtualIntentDispatcher.receiver(baseContext,clone,intent)?:intent)}
 override fun sendBroadcast(intent:Intent,receiverPermission:String?){baseContext.sendBroadcast(VirtualIntentDispatcher.receiver(baseContext,clone,intent)?:intent,receiverPermission)}
-override fun registerReceiver(receiver:BroadcastReceiver,filter:IntentFilter):Intent?{
-val w=object:BroadcastReceiver(){override fun onReceive(c:Context,i:Intent){receiver.onReceive(this@VirtualContext,i)}}
-receivers[receiver]=w
+override fun registerReceiver(receiver:BroadcastReceiver?,filter:IntentFilter):Intent?{
+val r=receiver?:return baseContext.registerReceiver(null,filter)
+val w=object:BroadcastReceiver(){override fun onReceive(c:Context,i:Intent){r.onReceive(this@VirtualContext,i)}}
+receivers[r]=w
 return baseContext.registerReceiver(w,filter)
+}
+override fun registerReceiver(receiver:BroadcastReceiver?,filter:IntentFilter,flags:Int):Intent?{
+val r=receiver?:return baseContext.registerReceiver(null,filter,flags)
+val w=object:BroadcastReceiver(){override fun onReceive(c:Context,i:Intent){r.onReceive(this@VirtualContext,i)}}
+receivers[r]=w
+return baseContext.registerReceiver(w,filter,flags)
+}
+override fun registerReceiver(receiver:BroadcastReceiver?,filter:IntentFilter,permission:String?,scheduler:Handler?):Intent?{
+val r=receiver?:return baseContext.registerReceiver(null,filter,permission,scheduler)
+val w=object:BroadcastReceiver(){override fun onReceive(c:Context,i:Intent){r.onReceive(this@VirtualContext,i)}}
+receivers[r]=w
+return baseContext.registerReceiver(w,filter,permission,scheduler)
+}
+override fun registerReceiver(receiver:BroadcastReceiver?,filter:IntentFilter,permission:String?,scheduler:Handler?,flags:Int):Intent?{
+val r=receiver?:return baseContext.registerReceiver(null,filter,permission,scheduler,flags)
+val w=object:BroadcastReceiver(){override fun onReceive(c:Context,i:Intent){r.onReceive(this@VirtualContext,i)}}
+receivers[r]=w
+return baseContext.registerReceiver(w,filter,permission,scheduler,flags)
 }
 override fun unregisterReceiver(receiver:BroadcastReceiver){baseContext.unregisterReceiver(receivers.remove(receiver)?:receiver)}
 }
