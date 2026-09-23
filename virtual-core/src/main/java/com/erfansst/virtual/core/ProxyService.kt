@@ -13,16 +13,18 @@ val c=CloneManager(this).list().firstOrNull{it.packageName==p&&it.cloneId==id}?:
 return targets.getOrPut(p+"#"+id+"#"+n){VirtualServiceHost(this).start(c,n)}
 }
 private fun clean(i:Intent):Intent{
+val p=i.getStringExtra("clone_package")
 val n=i.getStringExtra("target_service")
-return Intent(i).apply{
-removeExtra("clone_package");removeExtra("clone_id");removeExtra("target_service")
-if(!n.isNullOrBlank())component=ComponentName(i.getStringExtra("clone_package"),n)
-}
+return Intent(i).apply{removeExtra("clone_package");removeExtra("clone_id");removeExtra("target_service");if(!p.isNullOrBlank()&&!n.isNullOrBlank())component=ComponentName(p,n)}
 }
 override fun onStartCommand(intent:Intent?,flags:Int,startId:Int):Int{
-val t=runCatching{target(intent)}.getOrNull()?:return START_NOT_STICKY
-return t.onStartCommand(clean(intent!!),flags,startId)
+val i=intent?:return START_NOT_STICKY
+val t=runCatching{target(i)}.getOrNull()?:return START_NOT_STICKY
+return t.onStartCommand(clean(i),flags,startId)
 }
-override fun onBind(intent:Intent?):IBinder?=runCatching{target(intent)?.onBind(clean(intent!!))}.getOrNull()
+override fun onBind(intent:Intent?):IBinder?{
+val i=intent?:return null
+return runCatching{target(i)?.onBind(clean(i))}.getOrNull()
+}
 override fun onDestroy(){targets.values.toList().forEach{runCatching{it.onDestroy()}};targets.clear();super.onDestroy()}
 }
